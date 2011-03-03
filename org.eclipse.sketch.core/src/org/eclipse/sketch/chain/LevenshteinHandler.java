@@ -146,6 +146,7 @@ public class LevenshteinHandler extends SketchChainHandler
 	 */
 	private String stretch(String dna, int length) throws IllegalLengthException 
 	{
+		System.out.println("Stretching "+dna);
 		int curlength = dna.length();
 		
 		//Handling lengths that are too big
@@ -155,22 +156,36 @@ public class LevenshteinHandler extends SketchChainHandler
 				return dna;
 		
 		float step = curlength/(float)(length-curlength);
-		
+		System.out.println("step = "+step);
+		if (step==0) //happens if we sketch a unique point
+			step = 0.1f;
 		StringBuffer out = new StringBuffer();		
 		
 		//System.out.println(dna + "; length:"+curlength+"; step:"+step)
 		for (float i=0; i<curlength; i+=step)
 		{
 			if (i+step > curlength)
-			{
 				out.append(dna.substring((int)i));
-				if (out.length() < length)
-					out.append(dna.charAt((int)(dna.length()-1)));
-			}
 			else
-				out.append(dna.substring((int)i,(int)(i+step)))
-				   .append(dna.charAt((int)(i+step-1)));		
+			{
+				char c = dna.charAt((int)(i+step-1));
+				if (c=='0') //0 should not be repeated, so handled a different way
+				{
+					if (step >= 1)
+					{
+						c = dna.charAt((int)(i+step-2));
+						out.append(dna.substring((int)i,(int)(i+step-1))).append(c);
+					}
+					out.append('0');
+				}
+				else
+					out.append(dna.substring((int)i,(int)(i+step))).append(c);
+			}
 		}
+		
+		//This is to make sure that the stretching gives the right size
+			while (out.length() < length)
+				out.append(dna.charAt((int)(dna.length()-1)));
 		
 		return out.toString();
 	}
@@ -183,14 +198,17 @@ public class LevenshteinHandler extends SketchChainHandler
 		try 
 		{
 			String a;
-			a = l.stretch("1234567890", 10); 
+			a = l.stretch("12034056", 20); 
 			System.out.println(a+";length:"+a.length());
 			
-			a = l.stretch("3333345555567777899990", 95); 
+			a = l.stretch("12034056078", 20); 
+			System.out.println(a+";length:"+a.length());
+			
+			/*a = l.stretch("3333345555567777899990", 95); 
 			System.out.println(a+";length:"+a.length());
 			
 			a = l.stretch("86666666666655554444443323222222211118117887877770", 95); 
-			System.out.println(a+";length:"+a.length());
+			System.out.println(a+";length:"+a.length());*/
 		} 
 		catch (IllegalLengthException e) {e.printStackTrace();}
 	}

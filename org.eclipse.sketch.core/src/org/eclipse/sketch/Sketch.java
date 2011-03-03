@@ -130,7 +130,7 @@ public class Sketch
 	 */
 	public String getDna() {
 		if(dna==null)
-			dna = buildDna();
+			dna = buildDna(quantizedPoints);
 		return dna.toString();
 	}
 
@@ -150,51 +150,87 @@ public class Sketch
 	 * Based on work from Adrien Coyette, Sascha Schimke, Jean Vanderdonckt, and Claus Vielhauer - http://www.isys.ucl.ac.be/bchi/publications/2007/Schimke-Interact2007.pdf
 	 * @return
 	 */
-	private Dna buildDna(){
-		String s = "";
+	private static Dna buildDna(ArrayList<Point> quantizedPoints){
+		StringBuilder s = new StringBuilder();
 
 		for(int i=0;i<quantizedPoints.size();i++){
 			if(i+1==quantizedPoints.size()){
-				s += "";
 				break;
 			}
 
-			int x1 = quantizedPoints.get(i).x;
-			int y1 = quantizedPoints.get(i).y;
+			Point p0 = quantizedPoints.get(i);
+			Point p1 = quantizedPoints.get(i+1);
+			
+			int x0 = p0.x;
+			int y0 = p0.y;
 
-			int x2 = quantizedPoints.get(i+1).x;
-			int y2 = quantizedPoints.get(i+1).y;
+			int x1 = p1.x;
+			int y1 = p1.y;
 
-			int x = x2-x1;
-			int y = y2-y1;
+			int x = x1-x0;
+			int y = y1-y0;
 
-			if(x2==-1){
-				s+="0";
+			if(x1==-1){
+				s.append('0');
+				++i; //must do that in order to avoid the '4' placed after each '0'
+				/*
+				//Creates a new list of quantized points,
+				//simulating a "virtual line" between the end of the 
+				//last stroke and the beginning of the new stroke,
+				//in order to add its virtual dna to represent the distance between strokes
+				if (i+1 < quantizedPoints.size())
+				{
+					ArrayList<Point> vline = new ArrayList<Point>();
+					Point p2 = quantizedPoints.get(i+1);
+					
+					Dimension diff = p2.getDifference(p0);				
+					int dx = Math.abs(diff.width), dy = Math.abs(diff.height);
 
-			}else{
-
+					System.out.println(diff);
+					System.out.println(p0);
+					System.out.println(p2);
+					System.out.println("dx="+dx);
+					System.out.println("dy="+dy);
+					
+					float max_diff = Math.max(dx, dy);
+					float deltax = diff.width  / max_diff;
+					float deltay = diff.height / max_diff;
+					
+					for (int j=0; j<max_diff; j++)
+					{
+						Point vpoint = new Point(p0);
+						vpoint.x += deltax*j;
+						vpoint.y += deltay*j;
+						vline.add(vpoint);
+					}
+					
+					//Adds the virtual Dna between two '0'
+					s.append('0').append(buildDna(vline)).append('0');
+				}*/
+			}
+			else{
 				if(x>0 && y>0){
-					s+="4";
+					s.append('4');
 				}else if(x>0 && y==0){
-					s+="3";
+					s.append('3');
 				}else if(x>0 && y<0){
-					s+="2";
+					s.append('2');
 				}else if(x==0 && y<0){
-					s+="1";
+					s.append('1');
 				}else if(x<0 && y<0){				
-					s+="8";
+					s.append('8');
 				}else if(x<0 && y==0){
-					s+="7";
+					s.append('7');
 				}else if(x<0 && y>0){
-					s+="6";
+					s.append('6');
 				}else if(x==0 && y>0){
-					s+="5";
+					s.append('5');
 				}
 			}
 		}
 
 
-		return new Dna(s);
+		return new Dna(s.toString());
 	}
 	
 	/**
@@ -294,17 +330,17 @@ public class Sketch
 		return s;
 	}
 	
-	/**
-	 * Test method for Sketch.Dna
-	 */
-	public static void main(String args[])
-	{
-		Sketch.Dna dna = new Sketch.Dna("11111012340");
-		Sketch.Dna dna2 = new Sketch.Dna("123450");
-		System.out.println(dna);
-		System.out.println(dna.reverse());
-		System.out.println(dna.reverse().reverse());
-	}
+//	/**
+//	 * Test method for Sketch.Dna
+//	 */
+//	public static void main(String args[])
+//	{
+//		Sketch.Dna dna = new Sketch.Dna("11111012340");
+//		Sketch.Dna dna2 = new Sketch.Dna("123450");
+//		System.out.println(dna);
+//		System.out.println(dna.reverse());
+//		System.out.println(dna.reverse().reverse());
+//	}
 
 	
 }
