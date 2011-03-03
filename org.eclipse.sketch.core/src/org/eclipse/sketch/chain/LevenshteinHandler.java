@@ -160,8 +160,7 @@ public class LevenshteinHandler extends SketchChainHandler
 		if (step==0) //happens if we sketch a unique point
 			step = 0.1f;
 		StringBuffer out = new StringBuffer();		
-		
-		//System.out.println(dna + "; length:"+curlength+"; step:"+step)
+
 		for (float i=0; i<curlength; i+=step)
 		{
 			if (i+step > curlength)
