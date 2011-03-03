@@ -152,6 +152,10 @@ public class Sketch
 	 */
 	private static Dna buildDna(ArrayList<Point> quantizedPoints){
 		StringBuilder s = new StringBuilder();
+		
+		//Indicates that the current stroke is actually a virtual one, so
+		//it is not drawn 
+		boolean is_virtual=false;
 
 		for(int i=0;i<quantizedPoints.size();i++){
 			if(i+1==quantizedPoints.size()){
@@ -171,42 +175,12 @@ public class Sketch
 			int y = y1-y0;
 
 			if(x1==-1){
-				s.append('0');
+				if (is_virtual)
+					s.append(']');
+				else
+					s.append('[');
+				is_virtual = !is_virtual;
 				++i; //must do that in order to avoid the '4' placed after each '0'
-				/*
-				//Creates a new list of quantized points,
-				//simulating a "virtual line" between the end of the 
-				//last stroke and the beginning of the new stroke,
-				//in order to add its virtual dna to represent the distance between strokes
-				if (i+1 < quantizedPoints.size())
-				{
-					ArrayList<Point> vline = new ArrayList<Point>();
-					Point p2 = quantizedPoints.get(i+1);
-					
-					Dimension diff = p2.getDifference(p0);				
-					int dx = Math.abs(diff.width), dy = Math.abs(diff.height);
-
-					System.out.println(diff);
-					System.out.println(p0);
-					System.out.println(p2);
-					System.out.println("dx="+dx);
-					System.out.println("dy="+dy);
-					
-					float max_diff = Math.max(dx, dy);
-					float deltax = diff.width  / max_diff;
-					float deltay = diff.height / max_diff;
-					
-					for (int j=0; j<max_diff; j++)
-					{
-						Point vpoint = new Point(p0);
-						vpoint.x += deltax*j;
-						vpoint.y += deltay*j;
-						vline.add(vpoint);
-					}
-					
-					//Adds the virtual Dna between two '0'
-					s.append('0').append(buildDna(vline)).append('0');
-				}*/
 			}
 			else{
 				if(x>0 && y>0){
