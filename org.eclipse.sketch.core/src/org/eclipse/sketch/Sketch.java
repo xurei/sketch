@@ -157,10 +157,7 @@ public class Sketch
 		//it is not drawn 
 		boolean is_virtual=false;
 
-		for(int i=0;i<quantizedPoints.size();i++){
-			if(i+1==quantizedPoints.size()){
-				break;
-			}
+		for(int i=0;i<quantizedPoints.size()-1;i++){
 
 			Point p0 = quantizedPoints.get(i);
 			Point p1 = quantizedPoints.get(i+1);
