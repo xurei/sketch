@@ -37,7 +37,7 @@ import org.eclipse.gmf.runtime.emf.type.core.IElementType;
  */
 public class SketchBank {
 
-	String path = ResourcesPlugin.getWorkspace().getRoot().getLocation().toString() + File.separator + "sketches.xml";
+	String path;
 	//String path = "/home/ugo/runtime-shapes.product/sketches.xml";
 	
 	
@@ -56,8 +56,16 @@ public class SketchBank {
 		return instance;
 	}
 
-	private SketchBank(){
-		
+	private SketchBank()
+	{
+		try{
+		path = ResourcesPlugin.getWorkspace().getRoot().getLocation().toString() + File.separator + "sketches.xml";
+		}
+		catch (Exception e)
+		{
+			//FIXME debug, should be removed before june 2011
+			path = "/home/olivier/Dropbox/cpme/mémoire/sketches_sketchi.xml";
+		}
 		//if there is a bank already at the disk, fill the maps
 		fetch();
 		

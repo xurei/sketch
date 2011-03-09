@@ -26,7 +26,7 @@ import org.eclipse.swt.widgets.Display;
 public class SketchRecognizer extends Thread implements ISketchManagerObserver {
 	
 	Display d = Display.getCurrent();
-
+	
 	public boolean done = false;
 	private ArrayList<Sketch> sketches = new ArrayList<Sketch>();
 
@@ -53,9 +53,14 @@ public class SketchRecognizer extends Thread implements ISketchManagerObserver {
 
 	public void run() {
 
-		while (true) {
-			if (!d.isDisposed()) {
-				d.asyncExec(new Runnable() {
+		while (true) 
+		{
+			boolean running = !d.isDisposed();
+			if (d==null) //Hack to be able to use eclipsesketch recognition mechanism outside SWT
+				running = true; //TODO should be able to stop the system without org.eclipse.swt.widgets.Display
+			if (running) 
+			{
+				Runnable task = new Runnable() {
 					public void run() {
 						// System.out.println("waiting for sketches...");
 						if (!sketches.isEmpty()) {
@@ -82,10 +87,13 @@ public class SketchRecognizer extends Thread implements ISketchManagerObserver {
 								SketchBank.getInstance().dump();
 							}
 						}
-
 					}
-				});
+				};
 
+				if (d!=null)
+					d.asyncExec(task);
+				else
+					task.run(); //TODO should change that to a thread ... ?
 				/*
 				 * do normalize, post-processing here
 				 */

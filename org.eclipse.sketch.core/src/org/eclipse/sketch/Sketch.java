@@ -95,10 +95,6 @@ public class Sketch
 		return result;
 	}
 
-	public void setResult(HashMap<String, Object> result) {
-		this.result = result;
-	}
-
 	/**
 	 * 
 	 * @return the Point relative to the diagram
@@ -171,13 +167,15 @@ public class Sketch
 			int x = x1-x0;
 			int y = y1-y0;
 
-			if(x1==-1){
-				if (is_virtual)
-					s.append(']');
-				else
+			if(x1==-1)
+			{
+				if (x0!=-1)
 					s.append('[');
-				is_virtual = !is_virtual;
-				++i; //must do that in order to avoid the '4' placed after each '0'
+			}
+			else if(x1==-2)
+			{
+				if (x0!=-2)
+					s.append(']');
 			}
 			else{
 				if(x>0 && y>0){
@@ -225,7 +223,6 @@ public class Sketch
 	}
 
 	public void setQuantizedPoints(ArrayList<Point> quantizedPoints) {
-		System.out.println(quantizedPoints);
 		this.quantizedPoints = quantizedPoints;
 	}
 	

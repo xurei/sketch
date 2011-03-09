@@ -153,7 +153,10 @@ public abstract class SketchTool extends AbstractTool{
 
 		Point qp = new Point(Math.round(getLocation().x / grid), Math.round(getLocation().y / grid));
 		//quantizedPoints.add(qp);
+		boolean must_draw_begin = (prev_qp!=null);
 		addQP(qp, SketchTool.NODRAW_POINT);
+		if (must_draw_begin)
+			quantizedPoints.add(new Point(-2,-2));
 
 		points.add(getLocation());
 		
@@ -204,9 +207,6 @@ public abstract class SketchTool extends AbstractTool{
 				//Point prev_qp = quantizedPoints.get(quantizedPoints.size()-1);
 				
 				Dimension diff = qp.getDifference(prev_qp);
-				System.out.println(qp);
-				System.out.println(prev_qp);
-				System.out.println(diff);
 				
 				int dx = Math.abs(diff.width), dy = Math.abs(diff.height);
 				//If the distance between points is too big, they're interpolated
@@ -241,30 +241,11 @@ public abstract class SketchTool extends AbstractTool{
 			}
 	}
 	
-/*
-
-	private void drawGrid(GC gc){
-		gc.setLineWidth(1);
-		
-		for(int i=0;i<editor.getDiagramGraphicalViewer().getControl().getSize().x;i=i+grid){			
-			gc.drawLine(i, 0, i,editor.getDiagramGraphicalViewer().getControl().getSize().y );
-		}
-		for(int i=0;i<editor.getDiagramGraphicalViewer().getControl().getSize().y;i=i+grid){			
-			gc.drawLine(0, i, editor.getDiagramGraphicalViewer().getControl().getSize().x,i);
-		}
-		gc.setLineWidth(2);
-	}
-	
-	*/
-	
-	
 	@Override
 	public boolean handleButtonUp(int button) 
 	{
 		penuptime = System.currentTimeMillis();
-		
 	
-		System.out.println("\t\tHandleButtonUp");
 		points.add(new Point(-1,-1));
 		quantizedPoints.add(new Point(-1,-1));
 						
@@ -275,6 +256,10 @@ public abstract class SketchTool extends AbstractTool{
 	 * Cleans up the current points in buffers
 	 */
 	public void cleanup(){
+		System.out.println("Quantized points : ");
+		for (Point p : quantizedPoints)
+		System.out.println(p);
+		
 		points = new ArrayList<Point>();
 		quantizedPoints = new ArrayList<Point>();
 		

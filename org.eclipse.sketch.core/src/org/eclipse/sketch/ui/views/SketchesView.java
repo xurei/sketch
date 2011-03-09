@@ -89,7 +89,9 @@ public class SketchesView extends ViewPart {
 		int l = dna.toString().length();
 		
 		LinkedList<Integer> pathx = new LinkedList<Integer>();		
-		LinkedList<Integer> pathy = new LinkedList<Integer>();
+		LinkedList<Integer> pathy = new LinkedList<Integer>();	
+		LinkedList<Boolean> pathpen = new LinkedList<Boolean>();
+		boolean must_draw = true;
 		
 		//Calculating the image size
 			int curx=0, cury=0,
@@ -102,9 +104,10 @@ public class SketchesView extends ViewPart {
 			  switch(dir)
 			  {
 			    case '[':
+			    	must_draw = false;    
+				  break;
 			    case ']':
-			    //Nothing, but should be changed !!!!
-			    
+			    	must_draw = true;			    
 			    break;
 			    
 			    case '1':cury++;         break;
@@ -127,11 +130,12 @@ public class SketchesView extends ViewPart {
 		    
 			  pathx.push(curx);			    
 			  pathy.push(cury);
+			  pathpen.push(must_draw);
 			}
 			
 			
 			final int border = 2; //Size of the border, in dna's distance unit
-			final int grid_size = 3;
+			final int grid_size = 2;
 			int realW = (right-left + border*2)*grid_size;
 			int realH = (top-bottom + border*2)*grid_size;
 			int W, H;
@@ -140,9 +144,9 @@ public class SketchesView extends ViewPart {
 			int offsety = border-bottom;
 			
 			if (realW != W) //Centering in x-axis
-				offsetx += (W-realW)/2;
+				offsetx += (W-realW)/4;
 			if (realH != H) //Centering in y-axis
-				offsety += (H-realH)/2;
+				offsety += (H-realH)/4;
 		//End of Calculating the image size
 			
 		//Building the image from the sketch dna					
@@ -154,16 +158,18 @@ public class SketchesView extends ViewPart {
 		//End of building the image
 			
 		curx=(offsetx)*grid_size; 
-		cury=(offsety)*grid_size;
+		cury=H-(offsety)*grid_size;
 
 		Iterator<Integer> itx = pathx.iterator();
 		Iterator<Integer> ity = pathy.iterator();
+		Iterator<Boolean> itpen = pathpen.iterator();
 		while (itx.hasNext())
 		{
 			int x = (itx.next() + offsetx)*grid_size;
-			int y = (ity.next() + offsety)*grid_size;
+			int y = H-((ity.next() + offsety))*grid_size;
 			
-			g.drawLine(curx,cury, x,y);
+			if (itpen.next())
+				g.drawLine(curx,cury, x,y);
 			
 			curx = x;
 			cury = y;
