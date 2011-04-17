@@ -95,10 +95,6 @@ public class Sketch
 		return result;
 	}
 
-	public void setResult(HashMap<String, Object> result) {
-		this.result = result;
-	}
-
 	/**
 	 * 
 	 * @return the Point relative to the diagram
@@ -152,11 +148,8 @@ public class Sketch
 	 */
 	private static Dna buildDna(ArrayList<Point> quantizedPoints){
 		StringBuilder s = new StringBuilder();
-
-		for(int i=0;i<quantizedPoints.size();i++){
-			if(i+1==quantizedPoints.size()){
-				break;
-			}
+		
+		for(int i=0;i<quantizedPoints.size()-1;i++){
 
 			Point p0 = quantizedPoints.get(i);
 			Point p1 = quantizedPoints.get(i+1);
@@ -170,43 +163,15 @@ public class Sketch
 			int x = x1-x0;
 			int y = y1-y0;
 
-			if(x1==-1){
-				s.append('0');
-				++i; //must do that in order to avoid the '4' placed after each '0'
-				/*
-				//Creates a new list of quantized points,
-				//simulating a "virtual line" between the end of the 
-				//last stroke and the beginning of the new stroke,
-				//in order to add its virtual dna to represent the distance between strokes
-				if (i+1 < quantizedPoints.size())
-				{
-					ArrayList<Point> vline = new ArrayList<Point>();
-					Point p2 = quantizedPoints.get(i+1);
-					
-					Dimension diff = p2.getDifference(p0);				
-					int dx = Math.abs(diff.width), dy = Math.abs(diff.height);
-
-					System.out.println(diff);
-					System.out.println(p0);
-					System.out.println(p2);
-					System.out.println("dx="+dx);
-					System.out.println("dy="+dy);
-					
-					float max_diff = Math.max(dx, dy);
-					float deltax = diff.width  / max_diff;
-					float deltay = diff.height / max_diff;
-					
-					for (int j=0; j<max_diff; j++)
-					{
-						Point vpoint = new Point(p0);
-						vpoint.x += deltax*j;
-						vpoint.y += deltay*j;
-						vline.add(vpoint);
-					}
-					
-					//Adds the virtual Dna between two '0'
-					s.append('0').append(buildDna(vline)).append('0');
-				}*/
+			if(x1==-1)
+			{
+				if (x0!=-1)
+					s.append('[');
+			}
+			else if(x1==-2)
+			{
+				if (x0!=-2)
+					s.append(']');
 			}
 			else{
 				if(x>0 && y>0){
@@ -254,7 +219,6 @@ public class Sketch
 	}
 
 	public void setQuantizedPoints(ArrayList<Point> quantizedPoints) {
-		System.out.println(quantizedPoints);
 		this.quantizedPoints = quantizedPoints;
 	}
 	
@@ -297,6 +261,8 @@ public class Sketch
 	}
 	
 	private Point computeLocation(ArrayList<Point> points){
+		if (points.size()<1)
+			return new Point(-1,-1);
 		Point p = points.get(1);
 		
 		int sx = p.x,sy = p.y;

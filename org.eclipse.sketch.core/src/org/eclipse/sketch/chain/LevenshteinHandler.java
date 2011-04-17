@@ -13,12 +13,10 @@ package org.eclipse.sketch.chain;
 
 import java.util.*;
 
-import org.eclipse.emf.ecore.xmi.IllegalValueException;
-import org.eclipse.gmf.runtime.emf.type.core.IElementType;
 import org.eclipse.sketch.Sketch;
 import org.eclipse.sketch.SketchBank;
 import org.eclipse.sketch.exceptions.IllegalLengthException;
-import org.eclipse.sketch.util.*;
+
 /**
  * Recognize the sketch based on its string form, based on work from Adrien Coyette, Sascha Schimke, Jean Vanderdonckt, and Claus Vielhauer - http://www.isys.ucl.ac.be/bchi/publications/2007/Schimke-Interact2007.pdf
  * @author ugo

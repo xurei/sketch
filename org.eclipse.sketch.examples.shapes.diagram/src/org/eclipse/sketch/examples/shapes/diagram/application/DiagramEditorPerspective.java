@@ -16,6 +16,7 @@
 import org.eclipse.ui.IFolderLayout;
 import org.eclipse.ui.IPageLayout;
 import org.eclipse.ui.IPerspectiveFactory;
+import org.eclipse.ui.IPlaceholderFolderLayout;
 
 /**
  * @generated
@@ -29,7 +30,12 @@ public class DiagramEditorPerspective implements IPerspectiveFactory {
 		layout
 				.addPerspectiveShortcut(DiagramEditorWorkbenchAdvisor.PERSPECTIVE_ID);
 		IFolderLayout right = layout.createFolder(
-				"right", IPageLayout.RIGHT, 0.7f, layout.getEditorArea()); //$NON-NLS-1$
+				"right", IPageLayout.RIGHT, 0.3f, layout.getEditorArea()); //$NON-NLS-1$
+		
+		//IPlaceholderFolderLayout editor = layout.getFolderForView(layout.getEditorArea());
+		//createFolder("left", IPageLayout.LEFT, 0.7f, layout.getEditorArea()); //$NON-NLS-1$
+		
+		right.addView("org.eclipse.sketch.examples.shapes.diagram.part.ShapesDiagramEditorID");
 
 		right.addView("org.eclipse.sketch.ui.views.SketchRecognizerControlView");
 		right.addView("org.eclipse.sketch.ui.views.SketchesView");
