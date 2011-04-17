@@ -12,7 +12,6 @@ package org.eclipse.sketch;
 
 
 import java.util.ArrayList;
-import java.util.List;
 
 import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.draw2d.geometry.Point;
@@ -21,7 +20,6 @@ import org.eclipse.gmf.runtime.diagram.ui.parts.DiagramEditor;
 import org.eclipse.gmf.runtime.emf.type.core.IElementType;
 import org.eclipse.sketch.clientobserver.ISketchListener;
 import org.eclipse.sketch.ui.views.SketchRecognizerControlView;
-import org.eclipse.sketch.util.PointList;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Cursor;
@@ -49,6 +47,8 @@ public abstract class SketchTool extends AbstractTool{
 	private Color color;
 	private Color sampleColor;
 	private Color interpColor;
+	private Color nodrawColor;
+	private static final int NODRAW_POINT=0, INTERPOLATED_POINT=1;
 	
 	
 	//Default Parameters
@@ -58,10 +58,8 @@ public abstract class SketchTool extends AbstractTool{
 	boolean showSamples = false;
 	
 	private GC gc;
-
-	private int count = 0;		
-	private long penuptime = -1;
 	
+	private long penuptime = -1;
 	
 	//abstract methods 
 	public abstract ArrayList getTypes();
@@ -101,6 +99,7 @@ public abstract class SketchTool extends AbstractTool{
 
 		sampleColor = new Color(gc.getDevice(),160,0,60);
 		interpColor = new Color(gc.getDevice(),0,160,60);
+		nodrawColor = new Color(gc.getDevice(),160,160,160);
 		
 		SketchBank.getInstance().setTypes(getTypes());
 		
@@ -152,146 +151,117 @@ public abstract class SketchTool extends AbstractTool{
 	public boolean handleButtonDown(int button) {
 		penuptime=-1;
 
-		Point qp = new Point();
-		qp.setLocation(Math.round(getLocation().x / grid) * grid, Math.round(getLocation().y / grid) * grid);
-		quantizedPoints.add(qp);
-		
+		Point qp = new Point(Math.round(getLocation().x / grid), Math.round(getLocation().y / grid));
+		//quantizedPoints.add(qp);
+		boolean must_draw_begin = (prev_qp!=null);
+		addQP(qp, SketchTool.NODRAW_POINT);
+		if (must_draw_begin)
+			quantizedPoints.add(new Point(-2,-2));
+
 		points.add(getLocation());
 		
-		prev_qp = null;		
-		
 		return super.handleButtonDown(button);
+	}
+		
+	@Override
+	protected final boolean handleDrag() {
+		Point location = getLocation();
+		points.add(location);
+		
+		//In order to be able to draw the beginning of the sketch
+			if ( points.size()<2 || (points.size()>1 && points.get(points.size()-2).x == -1) )
+				points.add(location);
+
+		//updates the editor view
+			Point point1 = points.get(points.size()-2);
+			Point point2 = points.get(points.size()-1);		
+			gc.drawLine(point1.x, point1.y, point2.x, point2.y);
+
+		//count++;
+		//if(count==grid)
+			Point qp = new Point(Math.round(location.x / grid), Math.round(location.y / grid));
+			addQP(qp, SketchTool.INTERPOLATED_POINT);
+			
+			//count=0;
+		return true;
 	}
 	
 	
 	private Point prev_qp=null;
-	
-	@Override
-	protected final boolean handleDrag() {
-		
-		Point p = new Point();
-		p.setLocation(getLocation().x,getLocation().y);
-		points.add(p);
-		
-
-		if(points.size()>1 && points.get(points.size()-2).x == -1){
-			points.add(getLocation());
-		}
-		
-		
-		Point point1 = points.get(points.size()-2);
-		Point point2 = points.get(points.size()-1);
-		
-		 /*euclidean distance ..?
-		double pqx = (point2.x - point1.x); pqx*=pqx;
-		double pqy = (point2.y - point1.y); pqy*=pqy;
-		System.out.println(Math.sqrt(pqx+pqy));
-		if(Math.sqrt(pqx+pqy)>=2){
-			gc.setAlpha(70);
-		}else{
-			gc.setAlpha(100);
-		}
-		*/
-		
-		//updates the editor view
-		gc.drawLine(point1.x, point1.y, point2.x, point2.y);
-
-		count++;
-		if(count==grid)
-		{		
-			Point location = getLocation();
-			Point qp = new Point();
-			qp.setLocation(Math.round(location.x / grid), Math.round(location.y / grid));
-			
-			if (prev_qp!=null)
-			{
+	/**
+	 * @param qp the quantized point
+	 * @param interpolated 0 if sample, 1 if interpolated, 2 if interpolated and non-drawn 
+	 * (ie when the pen doesn't touch the surface for a while) 
+	 */
+	private void addQP(Point qp, int interpolated)
+	{
+			if (prev_qp!=null) //If there is some points sampled before this one, we try to interpolate
+			{	
+				if(showSamples)
+					switch (interpolated)
+					{
+						case SketchTool.NODRAW_POINT:       gc.setForeground(nodrawColor); break;
+						case SketchTool.INTERPOLATED_POINT: gc.setForeground(interpColor); break;
+					}
+				
+				//Point prev_qp = quantizedPoints.get(quantizedPoints.size()-1);
+				
 				Dimension diff = qp.getDifference(prev_qp);
 				
-				if (Math.abs(diff.width) > 1 || Math.abs(diff.height) > 1)
+				int dx = Math.abs(diff.width), dy = Math.abs(diff.height);
+				//If the distance between points is too big, they're interpolated
+				if (dx > 1 || dy > 1)
 				{					
-					int max_diff = (int)Math.max(Math.abs(diff.width), Math.abs(diff.height));
-					float deltax = diff.width  / (float)max_diff * 1;
-					float deltay = diff.height / (float)max_diff * 1;
+					int max_diff = (int)Math.max(dx, dy);
+					float deltax = diff.width  / (float)max_diff;
+					float deltay = diff.height / (float)max_diff;
 					
 					for (int i=0; i<max_diff; i++)
 					{
 						Point interp = new Point(prev_qp);
 						interp.x += deltax*i;
 						interp.y += deltay*i;
-						addQP(interp, true);
-					}
-						
-					/*}
-					float a = (prev_qp.y-qp.y)/(float)(prev_qp.x-qp.x);
-					float b = qp.y - a*qp.x;*/
-					
+						quantizedPoints.add(interp.getScaled(grid));
+						if(showSamples)
+							gc.drawRectangle(interp.x*grid,interp.y*grid,2,2);
+					}						
 				}
 			}
-					
-			//Final point, the one that is recorded
-			addQP(qp, false);
 			
-			count=0;
+			//Final point, the one that is actually sampled
+			quantizedPoints.add(qp.getScaled(grid));
 			prev_qp = qp;
-		}
-		
-			
-		return true;
-	}
 	
-	private void addQP(Point qp, boolean interpolated)
-	{
-		quantizedPoints.add(qp.getScaled(grid));
-
-		if(showSamples)
-		{
-			if (interpolated)
-				gc.setForeground(interpColor);
-			else
+			if(showSamples)
+			{
 				gc.setForeground(sampleColor);
-			
-			gc.drawRectangle(qp.x*grid,qp.y*grid,2,2);
-			gc.setForeground(color);
-			
-		}	
+				
+				gc.drawRectangle(qp.x*grid,qp.y*grid,2,2);
+				gc.setForeground(color);
+			}
 	}
-	
-/*
-
-	private void drawGrid(GC gc){
-		gc.setLineWidth(1);
-		
-		for(int i=0;i<editor.getDiagramGraphicalViewer().getControl().getSize().x;i=i+grid){			
-			gc.drawLine(i, 0, i,editor.getDiagramGraphicalViewer().getControl().getSize().y );
-		}
-		for(int i=0;i<editor.getDiagramGraphicalViewer().getControl().getSize().y;i=i+grid){			
-			gc.drawLine(0, i, editor.getDiagramGraphicalViewer().getControl().getSize().x,i);
-		}
-		gc.setLineWidth(2);
-	}
-	
-	*/
-	
 	
 	@Override
-	public boolean handleButtonUp(int button) {
+	public boolean handleButtonUp(int button) 
+	{
 		penuptime = System.currentTimeMillis();
-
+	
 		points.add(new Point(-1,-1));
 		quantizedPoints.add(new Point(-1,-1));
-		
-		prev_qp = null;
-		
-		
+						
 		return super.handleButtonUp(button);
 	}
 	
-	
-	
-	
+	/**
+	 * Cleans up the current points in buffers
+	 */
 	public void cleanup(){
-		points.clear();
-		quantizedPoints.clear();
+		System.out.println("Quantized points : ");
+		for (Point p : quantizedPoints)
+		System.out.println(p);
+		
+		points = new ArrayList<Point>();
+		quantizedPoints = new ArrayList<Point>();
 		
 		prev_qp = null;
 		
@@ -332,19 +302,9 @@ public abstract class SketchTool extends AbstractTool{
 								penuptime=-1;
 								Sketch sketch = new Sketch();
 
-								
-								//removes the last point (-1,-1) which is used only to mark pen lifts
-								points.remove(points.size()-1);
-								quantizedPoints.remove(quantizedPoints.size()-1);
-								
-								PointList list = new PointList();
-								list.addAll(points);
+								sketch.setPoints(points);
+								sketch.setQuantizedPoints(quantizedPoints);
 
-								sketch.eSet(SketchPackage.SKETCH__POINTLIST, list);
-								
-								sketch.eSet(SketchPackage.SKETCH__POINTS, points.clone());
-								sketch.eSet(SketchPackage.SKETCH__QUANTIZED_POINTS, quantizedPoints.clone());
-								
 								manager.newSketch(sketch);
 
 								//erases the drawing area
