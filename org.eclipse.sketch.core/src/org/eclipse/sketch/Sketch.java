@@ -11,8 +11,15 @@
 
 package org.eclipse.sketch;
 
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
+import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedList;
 
 import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.draw2d.geometry.Point;
@@ -71,6 +78,88 @@ public class Sketch
 		}
 	}
 // ------------------------------------------------------------------------------
+	
+	public int[][] bitmap()
+	{
+		LinkedList<Integer> pathx = new LinkedList<Integer>();		
+		LinkedList<Integer> pathy = new LinkedList<Integer>();	
+		
+		//Calculating the image size
+			int 
+		  left=Integer.MAX_VALUE, right=0,
+		  top=Integer.MAX_VALUE, bottom=0;
+
+			for (Point p:points)
+			{
+			  if (top    > p.y) top = p.y;
+			  if (right  < p.x) right = p.x;
+			  if (bottom < p.y) bottom = p.y;
+			  if (left   > p.x) left = p.x;
+				
+				pathx.push(p.x);			    
+			  pathy.push(p.y);
+			}
+			
+			int W = right-left+1;
+			int H = bottom-top+1;
+			
+			System.out.println("WH:"+W+" "+H);
+			System.out.println("TLBR:"+top+" "+left+" "+bottom+" "+right);
+		//End of Calculating the image size
+	//End of Calculating the image size
+		
+	//Building the image from the sketch dna					
+		BufferedImage out = new BufferedImage(W,H, BufferedImage.TYPE_BYTE_INDEXED); 
+		Graphics g = out.getGraphics();
+		g.setColor(Color.WHITE); g.fillRect(0, 0, W, H);
+		g.setColor(Color.BLACK);
+	//End of building the image
+		
+		int curx=points.get(0).x-left; 
+		int cury=points.get(0).y-top;
+	
+		Iterator<Integer> itx = pathx.iterator();
+		Iterator<Integer> ity = pathy.iterator();
+		while (itx.hasNext())
+		{
+			int x = itx.next()-left;
+			int y = ity.next()-top;
+			
+			g.drawLine(curx,cury, x,y);
+			
+			curx = x;
+			cury = y;
+		}
+		
+		int out2[][] = new int[H][W];
+		for (int y=0; y!=H; ++y)
+		{
+			for (int x=0; x!=W; ++x)
+				out2[y][x] = (out.getRGB(x, y)==-1)?0:1;
+		}
+		
+		/*
+		// Create new (blank) image of required (scaled) size
+		
+		final int thumbsize = 88; //FIXME This should be done dynamically : it is the size of a thumbnail in the view
+		
+		BufferedImage scaledImage = new BufferedImage(
+			thumbsize, thumbsize, BufferedImage.TYPE_BYTE_INDEXED);
+	
+		// Paint scaled version of image to new image
+	
+		Graphics2D graphics2D = scaledImage.createGraphics();
+		graphics2D.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
+			RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+		graphics2D.drawImage(out, 0, 0, thumbsize, thumbsize, null);
+	
+		// clean up
+		graphics2D.dispose();
+		g.dispose();
+		
+		return scaledImage;*/
+		return out2;
+	}
 
 	public static String ELEMENT_RESULT_KEY = "ELEMENT_RESULT_KEY_HashMap_IElementType_Integer";
 
@@ -207,7 +296,7 @@ public class Sketch
 	}
 
 	public void setPoints(ArrayList<Point> points) {
-		this.points = points;		
+		this.points = points;
 	}
 
 	/**

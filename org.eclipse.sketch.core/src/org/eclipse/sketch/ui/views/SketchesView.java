@@ -91,12 +91,12 @@ public class SketchesView extends ViewPart {
 		LinkedList<Integer> pathx = new LinkedList<Integer>();		
 		LinkedList<Integer> pathy = new LinkedList<Integer>();	
 		LinkedList<Boolean> pathpen = new LinkedList<Boolean>();
-		boolean must_draw = true;
 		
 		//Calculating the image size
+			boolean must_draw = true;
 			int curx=0, cury=0,
-		  left=0, right=0,
-		  top=0, bottom=0;
+		  left=Integer.MAX_VALUE, right=0,
+		  top=Integer.MAX_VALUE, bottom=0;
 		
 			for (int i=0; i!=l; ++i)
 			{

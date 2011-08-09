@@ -59,7 +59,7 @@ public class SketchBank {
 	private SketchBank()
 	{
 		try{
-		path = ResourcesPlugin.getWorkspace().getRoot().getLocation().toString() + File.separator + "sketches.xml";
+			path = ResourcesPlugin.getWorkspace().getRoot().getLocation().toString() + File.separator + "sketches.xml";
 		}
 		catch (Exception e)
 		{

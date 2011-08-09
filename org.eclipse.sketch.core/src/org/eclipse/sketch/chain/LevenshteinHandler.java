@@ -24,9 +24,8 @@ import org.eclipse.sketch.exceptions.IllegalLengthException;
  */
 public class LevenshteinHandler extends SketchChainHandler 
 {
-	 
 	private SketchChainHandler successor;
-	private static int KNN = 5; //Max number of winners by type; it is the K in 'KNN'
+	private static int KNN = 1; //Max number of winners by type; it is the K in 'KNN'
 	
 	/**
 	 *@see SketchChainHandler#setSuccessor(SketchChainHandler)
@@ -34,12 +33,43 @@ public class LevenshteinHandler extends SketchChainHandler
 	public void setSuccessor(SketchChainHandler s) {
 		this.successor = s;
 	}
+	
+	public String rotateDna90deg(String in)
+	{
+		StringBuffer out = new StringBuffer(in.length());
+		
+		for (int i=0; i!=in.length();++i)
+		{
+			char c = in.charAt(i);
+			switch(c)
+			{
+				case '1':
+				case '2':
+				case '3':
+				case '4':
+				case '5':
+				case '6':
+				case '7':
+				case '8': 
+					int val = Integer.parseInt(""+c)-1;
+					val = (val+2)%8 + 1;
+					out.append(val);
+				break;
+				default:
+					out.append(c);				
+			}
+		}
+		
+		return out.toString();
+	}
 
 	@Override
 	public SketchChainHandler perform(Sketch sketch) {
 		System.out.println("LEVENSHTEIN CHAIN: is it a shape?");
 		String dna = sketch.getDna();
 		String debug = "";
+		if (dna.length()<3)
+			return this;
 		
 		HashMap<Object, Integer> result_map = new HashMap<Object, Integer>();
 		
@@ -59,40 +89,46 @@ public class LevenshteinHandler extends SketchChainHandler
 				for(int sketch_i=0;sketch_i<sketches.size();sketch_i++)
 				{
 					String bankDna = sketches.get(sketch_i);
-					try 
+					
+					for (int i=0; i!=4; ++i)
 					{
-						String stretchedDna; 
-						if (bankDna.length() > dna.length())
-							stretchedDna = stretch(dna, bankDna.length());
-						else
+						try 
 						{
-							stretchedDna = dna;
-							bankDna = stretch(bankDna, dna.length());
+							String stretchedDna; 
+							if (bankDna.length() > dna.length())
+								stretchedDna = stretch(dna, bankDna.length());
+							else
+							{
+								stretchedDna = dna;
+								bankDna = stretch(bankDna, dna.length());
+							}
+							
+							debug += (type)+"\n";
+							debug += ("dna : "+stretchedDna)+"\n";
+							debug += ("bank: "+bankDna)+"\n";
+							
+							int distance = run(stretchedDna,bankDna);						
+							float normalized_distance = 100*(float)distance/stretchedDna.length();
+							debug += ("Distance % (stretch)   :"+normalized_distance)+"\n";
+							
+							//This block of code is for comparison, it can be removed in the release 
+								int distance2 = run(dna,sketches.get(sketch_i));						
+								float normalized_distance2 = 100*(float)distance2/Math.max(dna.length(), sketches.get(sketch_i).length()); //can
+								debug += ("Distance % (nostretch) :"+normalized_distance2)+"\n";
+	
+							scores.add(normalized_distance);
+								
+							sum += (int)normalized_distance;
+							sum2 += (int)normalized_distance2;
+						}
+						catch (IllegalLengthException e) 
+						{
+							System.err.println("ERROR : can't stretch this dna");
+							e.printStackTrace();
 						}
 						
-						debug += (type)+"\n";
-						debug += ("dna : "+stretchedDna)+"\n";
-						debug += ("bank: "+bankDna)+"\n";
-						
-						int distance = run(stretchedDna,bankDna);						
-						float normalized_distance = 100*(float)distance/stretchedDna.length();
-						debug += ("Distance % (stretch)   :"+normalized_distance)+"\n";
-						
-						//This block of code is for comparison, it can be removed in the release 
-							int distance2 = run(dna,sketches.get(sketch_i));						
-							float normalized_distance2 = 100*(float)distance2/Math.max(dna.length(), sketches.get(sketch_i).length()); //can
-							debug += ("Distance % (nostretch) :"+normalized_distance2)+"\n";
-
-						scores.add(normalized_distance);
-							
-						sum += (int)normalized_distance;
-						sum2 += (int)normalized_distance2;
+						bankDna = rotateDna90deg(bankDna);
 					}
-					catch (IllegalLengthException e) 
-					{
-						System.err.println("ERROR : can't stretch this dna");
-						e.printStackTrace();
-					}					
 				}
 				
 				Collections.sort(scores);
@@ -121,7 +157,7 @@ public class LevenshteinHandler extends SketchChainHandler
 		HashMap<String,Object> result = sketch.getResult();
 		result.put(Sketch.ELEMENT_RESULT_KEY, result_map);
 
-		System.out.println(debug);
+		//System.out.println(debug);
 		return this;
 	}
 	
@@ -144,7 +180,7 @@ public class LevenshteinHandler extends SketchChainHandler
 	 */
 	private String stretch(String dna, int length) throws IllegalLengthException 
 	{
-		System.out.println("Stretching "+dna);
+		//System.out.println("Stretching "+dna);
 		int curlength = dna.length();
 		
 		//Handling lengths that are too big
@@ -154,7 +190,7 @@ public class LevenshteinHandler extends SketchChainHandler
 				return dna;
 		
 		float step = curlength/(float)(length-curlength);
-		System.out.println("step = "+step);
+		//System.out.println("step = "+step);
 		if (step==0) //happens if we sketch a unique point
 			step = 0.1f;
 		StringBuffer out = new StringBuffer();		
